@@ -50,6 +50,8 @@ public:
 
 	//the image to use as a texture (ground)
 	shared_ptr<Texture> texture0;
+    shared_ptr<Texture> texture1;
+    shared_ptr<Texture> texture2;
 
 	//global data (larger program should be encapsulated)
 	vec3 gMin;
@@ -147,6 +149,7 @@ public:
 		texProg->addUniform("V");
 		texProg->addUniform("M");
 		texProg->addUniform("Texture0");
+        texProg->addUniform("lightPos");
 		texProg->addAttribute("vertPos");
 		texProg->addAttribute("vertNor");
 		texProg->addAttribute("vertTex");
@@ -157,6 +160,18 @@ public:
   		texture0->init();
   		texture0->setUnit(0);
   		texture0->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        texture1 = make_shared<Texture>();
+        texture1->setFilename(resourceDirectory + "/crate.jpg");
+        texture1->init();
+        texture1->setUnit(1);
+        texture1->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+        texture2 = make_shared<Texture>();
+        texture2->setFilename(resourceDirectory + "/world.jpg");
+        texture2->init();
+        texture2->setUnit(2);
+        texture2->setWrapModes(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE); 
 	}
 
 	void initGeom(const std::string& resourceDirectory)
@@ -169,7 +184,7 @@ public:
  		vector<tinyobj::material_t> objMaterials;
  		string errStr;
 		//load in the mesh and make the shape(s)
- 		bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/sphere.obj").c_str());
+ 		bool rc = tinyobj::LoadObj(TOshapes, objMaterials, errStr, (resourceDirectory + "/sphereWTex.obj").c_str());
 		if (!rc) {
 			cerr << errStr << endl;
 		} else {
@@ -187,7 +202,7 @@ public:
 		vector<tinyobj::shape_t> TOshapesB;
  		vector<tinyobj::material_t> objMaterialsB;
 		//load in the mesh and make the shape(s)
- 		rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/bunny.obj").c_str());
+ 		rc = tinyobj::LoadObj(TOshapesB, objMaterialsB, errStr, (resourceDirectory + "/dog.obj").c_str());
 		if (!rc) {
 			cerr << errStr << endl;
 		} else {
@@ -333,14 +348,14 @@ public:
 			Model->pushMatrix();
 				Model->translate(vec3(0, 1.4, 0));
 				Model->scale(vec3(0.5, 0.5, 0.5));
-				setModel(prog, Model);
-				sphere->draw(prog);
+				setModel(texProg, Model);
+				sphere->draw(texProg);
 			Model->popMatrix();
 			//draw the torso with these transforms
 			Model->pushMatrix();
 			  Model->scale(vec3(1.15, 1.35, 1.0));
-			  setModel(prog, Model);
-			  sphere->draw(prog);
+			  setModel(texProg, Model);
+			  sphere->draw(texProg);
 			Model->popMatrix();
 			// draw the upper 'arm' - relative 
 			//note you must change this to include 3 components!
@@ -365,20 +380,20 @@ public:
                         Model->translate(vec3(0.2, 0, 0)); // move to wrist joint
 
                         Model->scale(vec3(0.35, 0.25, 0.25));
-                        setModel(prog, Model);
-                        sphere->draw(prog);
+                        setModel(texProg, Model);
+                        sphere->draw(texProg);
                     Model->popMatrix();
 
                     Model->scale(vec3(0.7, 0.25, 0.25));
-                    setModel(prog, Model);
-                    sphere->draw(prog);
+                    setModel(texProg, Model);
+                    sphere->draw(texProg);
 			  	Model->popMatrix();
 
 			  //Do final scale ONLY to upper arm then draw
 			  //non-uniform scale
 			  Model->scale(vec3(0.8, 0.3, 0.25));
-			  setModel(prog, Model);
-			  sphere->draw(prog);
+			  setModel(texProg, Model);
+			  sphere->draw(texProg);
 			Model->popMatrix();
 
             // static left arm
@@ -401,20 +416,20 @@ public:
                         Model->translate(vec3(0.75, 0, 0)); // place at wrist
                         Model->rotate(-0.75, vec3(0, 0, 1)); // rotate wrist joint
                         Model->scale(vec3(0.35, 0.25, 0.25));
-                        setModel(prog, Model);
-                        sphere->draw(prog);
+                        setModel(texProg, Model);
+                        sphere->draw(texProg);
                     Model->popMatrix();
 
                     Model->scale(vec3(0.7, 0.25, 0.25));
-                    setModel(prog, Model);
-                    sphere->draw(prog);
+                    setModel(texProg, Model);
+                    sphere->draw(texProg);
 			  	Model->popMatrix();
 
 			  //Do final scale ONLY to upper arm then draw
 			  //non-uniform scale
 			  Model->scale(vec3(0.8, 0.3, 0.25));
-			  setModel(prog, Model);
-			  sphere->draw(prog);
+			  setModel(texProg, Model);
+			  sphere->draw(texProg);
 			Model->popMatrix();
 		
 		Model->popMatrix();
@@ -456,34 +471,34 @@ public:
 		View->rotate(gRot, vec3(0, 1, 0));
 
 		// Draw the scene
-		prog->bind();
-		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
-		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
-		glUniform3f(prog->getUniform("lightPos"), lightTrans, 2.0, 2.9);
+		texProg->bind();
+		glUniformMatrix4fv(texProg->getUniform("P"), 1, GL_FALSE, value_ptr(Projection->topMatrix()));
+		glUniformMatrix4fv(texProg->getUniform("V"), 1, GL_FALSE, value_ptr(View->topMatrix()));
+		glUniform3f(texProg->getUniform("lightPos"), lightTrans, 2.0, 2.9);
 
 		// draw the array of bunnies
 		Model->pushMatrix();
 
-		float sp = 3.0;
+		float sp = 2.1;
 		float off = -3.5;
 		  for (int i =0; i < 3; i++) {
 		  	for (int j=0; j < 3; j++) {
 			  Model->pushMatrix();
-				Model->translate(vec3(off+sp*i, -1, off+sp*j));
-				Model->scale(vec3(0.85, 0.85, 0.85));
-				SetMaterial(prog, (i+j)%3);
-				glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-				theBunny->draw(prog);
+				Model->translate(vec3(off+sp*i, 0, off+sp*j));
+				Model->scale(vec3(0.15, 0.15, 0.15));
+				texture1->bind(texProg->getUniform("Texture0"));
+				glUniformMatrix4fv(texProg->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+				theBunny->draw(texProg);
 			  Model->popMatrix();
 			}
 		  }
 		Model->popMatrix();
 
 		//draw the waving HM
-		SetMaterial(prog, 1);
+		texture2->bind(texProg->getUniform("Texture0"));
 		drawHierModel(Model);
 
-		prog->unbind();
+		texProg->unbind();
 
 		//switch shaders to the texture mapping shader and draw the ground
 		texProg->bind();
