@@ -22,7 +22,7 @@ void main() {
   vec4 texColor0 = texture(Texture0, vTexCoord);
 
   	//to set the out color as the texture color 
-  	Outcolor = texColor0;
+  	//Outcolor = texColor0;
 
     vec3 normal = normalize(fragNor);
 	vec3 light = normalize(lightDir);
@@ -30,19 +30,20 @@ void main() {
     dC = max(0, (normal.x*light.x) + (normal.y*light.y) + (normal.z*light.z));
 
     vec3 V = -1*EPos;
-    vec3 H = normalize(lightDir + V);
+    vec3 H = normalize(light + normalize(V));
     NH = (normal.x*H.x) + (normal.y*H.y) + (normal.z*H.z);
-    NHPow = pow(NH, 0.7);
+    NHPow = pow(NH, 2.0);
 
     MatAmb = (0.1*texColor0).xyz;
-    MatDif = (0.5*texColor0).xyz;
-    MatSpec = (0.5*texColor0).xyz;
+    MatDif = (0.7*texColor0).xyz;
+    MatSpec = (0.7*texColor0).xyz;
 
     //if(texColor0.b > texColor0.g && texColor0.b > texColor0.r){
     //    discard;
     //}
 
-	Outcolor = vec4(MatAmb + (dC*MatDif) + (NHPow*MatSpec), 22.0);
+	//Outcolor = MatAmb + (dC*MatDif) + (NHPow*MatSpec);
+    Outcolor = vec4(MatAmb + (dC*MatDif) + (NHPow*MatSpec), 1.0);
   
   	//to set the outcolor as the texture coordinate (for debugging)
 	//Outcolor = vec4(vTexCoord.s, vTexCoord.t, 0, 1);
